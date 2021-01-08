@@ -1,23 +1,46 @@
-# Compiled class file
+
+!**/src/main/**/bin/
+!**/src/main/**/build/
+!**/src/main/**/out/
+!**/src/test/**/bin/
+!**/src/test/**/build/
+!**/src/test/**/out/
+!gradle/wrapper/gradle-wrapper.jar
+
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
 *.ear
-*.zip
-*.tar.gz
+*.iml
+*.ipr
+*.iws
+*.jar
+*.log
+*.nar
 *.rar
+*.tar.gz
+*.war
+*.zip
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+.apt_generated
+.classpath
+.factorypath
+.gradle
+.idea
+.mtj.tmp/
+.project
+.settings
+.springBeans
+.sts4-cache
+.vscode/
+
+/.nb-gradle/
+/dist/
+/nbbuild/
+/nbdist/
+/nbproject/private/
+
+HELP.md
+bin/
+build/
 hs_err_pid*
+out/
