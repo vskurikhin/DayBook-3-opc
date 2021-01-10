@@ -1,12 +1,41 @@
+buildscript {
+	def liquibase_gradle_plugin = System.getProperty('VERSION_LIQUIBASE_GRADLE_PLUGIN') ?: VERSION_LIQUIBASE_GRADLE_PLUGIN
+	def liquibase = System.getProperty('VERSION_ORG_LIQUIBASE') ?: VERSION_ORG_LIQUIBASE
+	dependencies {
+		classpath("org.liquibase:liquibase-gradle-plugin:${liquibase_gradle_plugin}") {
+			exclude(module: 'liquibase-core')
+		}
+		classpath "org.liquibase:liquibase-core:${liquibase}"
+	}
+}
+
 plugins {
-	id 'org.springframework.boot' version '2.4.1'
+	id 'groovy'
+	id 'idea'
 	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
 	id 'java'
+	id 'org.liquibase.gradle' version '2.0.4'
+	id 'org.springframework.boot' version '2.4.1'
 }
 
 group = 'su.svn'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
+
+static def getEnv(key, defaultValue) {
+	return System.getenv(key) ?: defaultValue
+}
+
+
+ext.libVers = [
+		hibernate_validator         : getEnv('VERSION_HIBERNATE_VALIDATOR', VERSION_HIBERNATE_VALIDATOR),
+		liquibase                   : getEnv('VERSION_ORG_LIQUIBASE', VERSION_ORG_LIQUIBASE),
+		liquibase_gradle_plugin     : getEnv('VERSION_LIQUIBASE_GRADLE_PLUGIN', VERSION_LIQUIBASE_GRADLE_PLUGIN),
+		liquibase_groovy_dsl        : getEnv('VERSION_LIQUIBASE_GROOVY_DSL', VERSION_LIQUIBASE_GROOVY_DSL),
+		projectlombok               : getEnv('VERSION_PROJECTLOMBOK', VERSION_PROJECTLOMBOK),
+		slf4j                       : getEnv('VERSION_ORG_SLF4J_VERSION', VERSION_ORG_SLF4J_VERSION),
+		mockito_core                : '3.2.4',
+]
 
 configurations {
 	compileOnly {
@@ -19,13 +48,82 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.springframework.data:spring-data-rest-hal-explorer'
+	implementation 'com.oracle.database.jdbc:ojdbc8'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.oracle.database.jdbc:ojdbc8'
+	runtimeOnly 'com.oracle.database.ha:ons'
+	runtimeOnly 'com.oracle.database.ha:simplefan'
+	runtimeOnly 'com.oracle.database.jdbc:ucp'
+	runtimeOnly 'com.oracle.database.nls:orai18n'
+	runtimeOnly 'com.oracle.database.security:osdt_cert'
+	runtimeOnly 'com.oracle.database.security:osdt_core'
+	runtimeOnly 'com.oracle.database.security:oraclepki'
+	runtimeOnly 'com.oracle.database.xml:xdb'
+
+	liquibaseRuntime group: 'org.slf4j', name: 'slf4j-api', version: libVers.slf4j
+	liquibaseRuntime group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+	liquibaseRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+	liquibaseRuntime group: 'org.liquibase', name: 'liquibase-core', version: libVers.liquibase
+	liquibaseRuntime group: 'org.liquibase', name: 'liquibase-gradle-plugin', version: libVers.liquibase_gradle_plugin
+	liquibaseRuntime 'com.oracle.database.jdbc:ojdbc8'
+	liquibaseRuntime 'com.oracle.database.jdbc:ucp'
+	liquibaseRuntime 'com.oracle.database.security:osdt_cert'
+	liquibaseRuntime 'com.oracle.database.security:osdt_core'
+	liquibaseRuntime 'com.oracle.database.security:oraclepki'
+
+
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+def db_url = getEnv('DBURL', DATABASE_URL)
+def db_username = getEnv('DBUSER', DATABASE_USERNAME)
+def db_password = getEnv('DBPASS', DATABASE_PASSWORD)
+def run_list = project.properties['runList'] ?: 'dbuser'
+
+liquibase {
+	activities {
+		dbuser {
+			changeLogFile "src/main/resources/db/changelog/Change-Log.xml"
+			url db_url
+			username db_username
+			password db_password
+			classpath "$rootDir"
+		}
+	}
+	runList = run_list
+}
+
+def getProjectProperty(key, defaultValue) {
+	return project.getProperties().get(key) ?: defaultValue
+}
+
+task makeMigrationFile() {
+	doLast {
+		def projectDir = project.projectDir.toString()
+		def resourcesDb = "src/main/resources/db"
+		def liquibaseHome = "${projectDir}/${resourcesDb}"
+		def date = new Date()
+		def formattedDate = date.format('yyyy-MM-dd_HH-mm-ss')
+		def scriptName = this.getProjectProperty('scriptName', 'migration')
+		def fileName = "changelogs_${formattedDate}_${scriptName}.xml"
+		def templateText = file("${liquibaseHome}/changeSet.xml.template").text
+		def changeSetAuthor = getProjectProperty('author', 'Victor N. Skurikhin')
+		def logicalFilePath = "./${resourcesDb}/changelog/Change-Sets/${fileName}"
+		def binding = [
+				"changeSetId"    : "${formattedDate}",
+				"logicalFilePath": "${logicalFilePath}",
+				"author"         : "${changeSetAuthor}"
+		]
+		def engine = new groovy.text.SimpleTemplateEngine()
+		def outText = engine.createTemplate(templateText).make(binding).toString()
+		file("${liquibaseHome}/changelog/Change-Sets/${fileName}").text = outText
+	}
 }
 
 test {
