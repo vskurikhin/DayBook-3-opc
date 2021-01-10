@@ -16,7 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,7 +26,8 @@ import java.util.UUID;
 @ToString
 @Entity
 @Table(name = "user_name")
-public class UserName implements Serializable {
+public class UserName implements DBSubject {
+    static final long serialVersionUID = 5222835854550223333L;
 
     @Getter
     @NotNull
