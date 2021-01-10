@@ -34,6 +34,8 @@ ext.libVers = [
 		liquibase_groovy_dsl        : getEnv('VERSION_LIQUIBASE_GROOVY_DSL', VERSION_LIQUIBASE_GROOVY_DSL),
 		projectlombok               : getEnv('VERSION_PROJECTLOMBOK', VERSION_PROJECTLOMBOK),
 		slf4j                       : getEnv('VERSION_ORG_SLF4J_VERSION', VERSION_ORG_SLF4J_VERSION),
+		springdoc_openapi_webflux_ui: getEnv('VERSION_SPRINGDOC_OPENAPI_WEBFLUX', VERSION_SPRINGDOC_OPENAPI_WEBFLUX),
+		jsonwebtoken_jjwt			: '0.11.2',
 		mockito_core                : '3.2.4',
 ]
 
@@ -48,12 +50,22 @@ repositories {
 }
 
 dependencies {
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'com.oracle.database.jdbc:ojdbc8'
+	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-	implementation 'org.liquibase:liquibase-core'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.data:spring-data-rest-hal-explorer'
-	implementation 'com.oracle.database.jdbc:ojdbc8'
-	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	implementation "org.springdoc:springdoc-openapi-ui:$libVers.springdoc_openapi_webflux_ui"
+	implementation "org.springdoc:springdoc-openapi-webmvc-core:$libVers.springdoc_openapi_webflux_ui"
+	implementation "org.springdoc:springdoc-openapi-hateoas:$libVers.springdoc_openapi_webflux_ui"
+	implementation "org.springdoc:springdoc-openapi-data-rest:$libVers.springdoc_openapi_webflux_ui"
+
+	implementation "io.jsonwebtoken:jjwt-api:$libVers.jsonwebtoken_jjwt"
+	implementation "io.jsonwebtoken:jjwt-impl:$libVers.jsonwebtoken_jjwt"
+	implementation "io.jsonwebtoken:jjwt-jackson:$libVers.jsonwebtoken_jjwt"
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.oracle.database.ha:ons'

@@ -5,7 +5,9 @@ app:
 spring:
   data:
     rest:
-      basePath: /api/opc/v1
+      base-path: /api/opc/v1
+      default-page-size: 100
+      max-page-size: 1000
   datasource:
     url: ${DBURL:jdbc:oracle:thin:@SID}
     driver-class-name: oracle.jdbc.driver.OracleDriver
